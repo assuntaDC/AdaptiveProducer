@@ -5,7 +5,4 @@ public interface Client {
 	public void startClient();
 	public void stopClient();
 	public boolean isAlive();
-	
-	//TO DELETE
-	public void setPS();
 }

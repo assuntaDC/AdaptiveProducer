@@ -16,7 +16,7 @@ import javax.jms.Session;
 import org.apache.activemq.artemis.jms.client.ActiveMQQueueConnectionFactory;
 
 public class Consumer{
-	public long CONSUMER_PERIOD = 500;
+	public long CONSUMER_PERIOD = 1000;
 	private String queueName;
 	private String address;
 	public int consumed;

@@ -9,6 +9,7 @@ import dynamiClientFramework.clients.Client;
 import dynamiClientFramework.clients.DMQTTClientCreator;
 import dynamiClientFramework.clients.Sample;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
+import dynamiClientFramework.test.TestDJMSClientCreator;
 
 public class MQTTNodeDriver {
 	private Client dclient;
@@ -24,8 +25,8 @@ public class MQTTNodeDriver {
 	
 	public MQTTNodeDriver(String topicName, String acceptorAddress, int id){
 		nodeId = id;
-		dclient = new DMQTTClientCreator().createDynamicClient(topicName, acceptorAddress);
-		if(nodeId==1) dclient.setPS();
+		if(nodeId==1) dclient = new TestDJMSClientCreator().createDynamicClient(topicName, acceptorAddress, true);
+		else dclient = new DMQTTClientCreator().createDynamicClient(topicName, acceptorAddress);
 	}
 	
 	public void startSending() {

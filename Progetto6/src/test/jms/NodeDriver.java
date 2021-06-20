@@ -9,11 +9,12 @@ import dynamiClientFramework.clients.Client;
 import dynamiClientFramework.clients.DJMSClientCreator;
 import dynamiClientFramework.clients.Sample;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
+import dynamiClientFramework.test.TestDJMSClientCreator;
 
 public class NodeDriver{
 	
 	private Client dclient;
-	public long SENDER_PERIOD = 300;
+	public long SENDER_PERIOD = 500;
 	private int nodeId;
 	public int sent = 0;
 	
@@ -25,8 +26,8 @@ public class NodeDriver{
 	
 	public NodeDriver(String queueName, String acceptorAddress, int id){
 		nodeId = id;
-		dclient = new DJMSClientCreator().createDynamicClient(queueName, acceptorAddress);
-		if(nodeId==1) dclient.setPS();
+		if(id!=1) dclient = new DJMSClientCreator().createDynamicClient(queueName, acceptorAddress);
+		else dclient = new TestDJMSClientCreator().createDynamicClient(queueName, acceptorAddress, true);
 	}
 	
 	public void startSending() {
@@ -46,7 +47,7 @@ public class NodeDriver{
 		public void run() {
 			int temperature = (int) ((int)(Math.random() * range) + min);
 			try {
-				Sample sample = new Sample(temperature, 1000);
+				Sample sample = new Sample(temperature, 2000);
 				dclient.trySending(sample);
 				//System.out.println(java.time.LocalTime.now() + " Node n." + nodeId + " - Produced mex n." + id + " : " + temperature + " C");
 				id++;

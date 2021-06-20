@@ -1,4 +1,4 @@
-package dynamiClientFramework.polling;
+package dynamiClientFramework.test;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,24 +21,25 @@ import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 import dynamiClientFramework.clients.DynamicClient;
 import dynamiClientFramework.clients.PollingService;
 
-public class PollingService2 extends PollingService{
+public class PollingServiceTest{
 
 	private long pollingPeriod;
 	private String resourceName;
 	private boolean topic;
-	private DynamicClient client;
+	private DynamicClientTest client;
 	private QueueConnectionFactory factory;
 	private QueueSession session;
 	private QueueConnection connection;
 	private QueueRequestor requestor;
 	private ScheduledFuture<?> future;
 	private ScheduledExecutorService executor;
+	private boolean test;
 
-	public PollingService2(DynamicClient client, long pollingPeriod, boolean topic){
-		super(client, pollingPeriod, topic);
+	public PollingServiceTest(DynamicClientTest client, long pollingPeriod, boolean topic, boolean test){
 		this.client=client;
 		this.pollingPeriod=pollingPeriod;
 		this.topic=topic;
+		this.test = test;
 	}
 
 	public void startPolling(){
@@ -81,14 +82,16 @@ public class PollingService2 extends PollingService{
 			System.out.println("\n" + client.getDestination() + " contains " + messageCount + " messages.");
 			client.updateQueueStatus(messageCount);
 
-			System.out.println("Congestion Status: " + client.getStatus().toString());
-			System.out.println("Strategy: " + client.getStrategy().toString());
-			System.out.println("SendBuffer Size: " + client.getBUFFER_DIM());
-			System.out.println("Aggressive: " + client.doesAggressiveStrategy());
-			System.out.println("SendBuffer messages: " + client.getSendBuffer().size());
-			System.out.println("Aggregate mex: " + client.getAggregateCount());
-			System.out.println("Aggregate Sent: " + client.getAggregateSent());
-			System.out.println("Invalid mex: " + client.getInvalidCount()+"\n");
+			if(test) {
+				System.out.println("Congestion Status: " + client.getStatus().toString());
+				System.out.println("Strategy: " + client.getStrategy().toString());
+				System.out.println("SendBuffer Size: " + client.getBUFFER_DIM());
+				System.out.println("Aggressive: " + client.doesAggressiveStrategy());
+				System.out.println("SendBuffer messages: " + client.getSendBuffer().size());
+				System.out.println("Aggregate mex: " + client.getAggregateCount());
+				System.out.println("Aggregate Sent: " + client.getAggregateSent());
+				System.out.println("Invalid mex: " + client.getInvalidCount()+"\n");
+			}
 			//System.out.println("Drop count: " + sup + "\n "); 
 
 		} catch (JMSException e) {

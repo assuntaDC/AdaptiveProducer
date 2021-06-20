@@ -12,16 +12,19 @@ public class MQTTtestProject {
 		
 		String acceptorAddress = "tcp://0.0.0.0:61616";
 		String topic = "topic.test";
-		int NODES = 3, CONSUMERS = 1;
+		int NODES = 10, CONSUMERS = 2;
 		
+		long max = 3000;
+	    long min = 500;
+	    long range = max - min + 1;
 		
 		//set up consumer
 		System.out.println("CONSUMERS:" + CONSUMERS);
 		ArrayList<MQTTConsumer> consumers = new ArrayList<MQTTConsumer>();
 		for(int i=1; i<=CONSUMERS; i++) {
 			MQTTConsumer consumer = new MQTTConsumer(topic, acceptorAddress, i);
-			//if(i==1 || i==3) consumer.CONSUMER_PERIOD = 500;
-			System.out.println("Consumer n." + i + " - consuming rate: "+Math.round(1.0/((double)consumer.CONSUMER_PERIOD/1000.0)) + " packets/s");
+			consumer.CONSUMER_PERIOD = (long)((long)(Math.random() * range) + min);
+			System.out.println("Consumer n." + i + " - consuming period: "+ consumer.CONSUMER_PERIOD + " s");
 			consumer.startConsuming();
 			consumers.add(consumer);
 		}
@@ -31,8 +34,8 @@ public class MQTTtestProject {
 		ArrayList<MQTTNodeDriver> nodes = new ArrayList<MQTTNodeDriver>();
 		for(int i=1; i<=NODES; i++) {
 			MQTTNodeDriver node = new MQTTNodeDriver(topic, acceptorAddress, i);
-			if(i%2==0) node.SENDER_PERIOD *= 2;
-			System.out.println("Node n." + i + " - sending rate: "+Math.round(1.0/((double)node.SENDER_PERIOD/1000.0)) + " packets/s");
+			node.SENDER_PERIOD = (long)((long)(Math.random() * range) + min);
+			System.out.println("Node n." + i + " - sending period: "+ node.SENDER_PERIOD + " s");
 			node.startSending();
 			nodes.add(node);
 		}
@@ -43,20 +46,8 @@ public class MQTTtestProject {
 		Thread.sleep(10000);
 		
 		//stop and clean all
-		int sent = 0, consumed = 0;
-		for(MQTTNodeDriver node: nodes) {
-			node.stopSending();
-			sent += node.sent;
-		}
-		for(MQTTConsumer consumer: consumers) {
-			consumer.stopConsuming();
-			consumed += consumer.consumed;
-		}
-		
-		System.out.println("----SIMULATION ENDEND----\n");/*
-		System.out.println("Total sent: " + sent);
-		System.out.println("Total sent by n.1: " + nodes.get(0).sent);
-		System.out.println("Total received: " + consumed);
-		*/
+		for(MQTTNodeDriver node: nodes) node.stopSending();
+		for(MQTTConsumer consumer: consumers) consumer.stopConsuming();
+		System.out.println("----SIMULATION ENDEND----\n");
 	}
 }

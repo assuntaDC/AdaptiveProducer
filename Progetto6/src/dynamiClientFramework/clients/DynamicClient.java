@@ -10,15 +10,13 @@ import java.util.Properties;
 
 import dynamiClientFramework.clients.exceptions.InvalidPropertyException;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
-import dynamiClientFramework.polling.PollingService2;
 
 
 public abstract class DynamicClient implements Client{
 	
-	//TO TURN PRIVATE
-	public enum State {NORMAL, CONGESTION};
-	public enum Strategy {DROP, AGGREGABLE};
-	public enum Operations {MIN, MAX, SUM, MEAN};
+	private enum State {NORMAL, CONGESTED};
+	private enum Strategy {DROP, AGGREGABLE};
+	private enum Operations {MIN, MAX, SUM, MEAN};
 	
 	private int EPSILON;
 	private int BUFFER_DIM;
@@ -33,12 +31,7 @@ public abstract class DynamicClient implements Client{
 	private	PollingService ps; 
 	private int currMessageCount;
 	private String destination, acceptorAddress;
-	
-	//TO DELETE: TEST ONLY
-	private int aggregateCount = 0;	
-	private int aggregateSent = 0;	
-	private int invalidCount = 0;
-	
+		
 	public DynamicClient(String destination, String acceptorAddress) {
 		this.destination=destination;
 		this.acceptorAddress=acceptorAddress;
@@ -58,7 +51,7 @@ public abstract class DynamicClient implements Client{
 			if(!sendBuffer.isEmpty()) emptyBuffer();
 			sendMessage(sample);
 			break;
-		case CONGESTION:
+		case CONGESTED:
 			handleStrategy(sample);
 			break;
 		}
@@ -143,7 +136,6 @@ public abstract class DynamicClient implements Client{
 	}
 	
 	private void aggregate(Sample sample) {
-		aggregateCount++;
 	    sendBuffer.add(sample);
 		if(sendBuffer.size()>=BUFFER_DIM){
 	         Serializable value = computeAggregation();
@@ -153,7 +145,6 @@ public abstract class DynamicClient implements Client{
 				} catch (InvalidSampleTTLException e) {
 					e.printStackTrace();
 				}
-	     		aggregateSent++;
 	         }
 	         sendBuffer.clear();
 		}
@@ -180,7 +171,7 @@ public abstract class DynamicClient implements Client{
 				double value = (double) s.getValue();
 				if(value < min) min = value;
 				validCount++;
-			}else invalidCount++;
+			}
 		}
 		if(validCount>0)//aggregate at least two samples
 			return min;
@@ -196,7 +187,7 @@ public abstract class DynamicClient implements Client{
 				double value = (double) s.getValue();
 				if(value > max) max = value;
 				validCount++;
-			}else invalidCount++;
+			}
 		}
 		if(validCount>0)//aggregate at least two samples
 			return max;
@@ -210,7 +201,7 @@ public abstract class DynamicClient implements Client{
 			if(s.isValid()) {
 				sum += (Double) s.getValue();
 				validCount++;
-			}else invalidCount++;
+			}
 		}
 		if(validCount>0)//aggregate at least two samples
 			return sum;
@@ -224,7 +215,7 @@ public abstract class DynamicClient implements Client{
 			if(s.isValid()) {
 				mean += (Double) s.getValue();
 				validCount++;
-			}else invalidCount++;
+			}
 		}
 		if(validCount>0) {
 			//aggregate at least two samples
@@ -236,11 +227,7 @@ public abstract class DynamicClient implements Client{
 	
 	private void emptyBuffer() {
 		for(Sample sample: sendBuffer)
-			if(sample.isValid()) {
-				sendMessage(sample);
-				aggregateCount--;
-			}
-			else invalidCount++;
+			if(sample.isValid()) sendMessage(sample);
 		sendBuffer.clear();
 	} 
 			
@@ -254,66 +241,24 @@ public abstract class DynamicClient implements Client{
 		//System.out.println("Delta: " + delta);
 		switch(status) {
 			case NORMAL: 
-				if(messageCount>EPSILON) status=State.CONGESTION;
+				if(messageCount>EPSILON) status=State.CONGESTED;
 				break;
-			case CONGESTION:
+			case CONGESTED:
 				if(delta<=0) {
 					if(messageCount<=EPSILON) status=State.NORMAL;
-					aggressiveStrategy=false;
+					else aggressiveStrategy=false;
 				}
 				else if(delta>0) aggressiveStrategy=true;
 				break;
 			}
 	}
 
-	
-	//TO DELETE: FOR TEST ONLY
-	public void setPS() {
-		this.ps = new PollingService2(this, POLLING_PERIOD, true);
-	}
-	
 	public String getDestination() {
 		return destination;
 	}
 
 	public String getAddress() {
 		return acceptorAddress;
-	}
-		
-	public int getBUFFER_DIM() {
-		return BUFFER_DIM;
-	}
-
-	public boolean doesAggressiveStrategy() {
-		return aggressiveStrategy;
-	}
-
-	public State getStatus() {
-		return status;
-	}
-
-	public Strategy getStrategy() {
-		return strategy;
-	}
-
-	public int getCurrMessageCount() {
-		return currMessageCount;
-	}
-
-	public int getAggregateCount() {
-		return aggregateCount;
-	}
-	
-	public int getAggregateSent() {
-		return aggregateSent;
-	}
-	
-	public int getInvalidCount() {
-		return invalidCount;
-	}
-	
-	public List<Sample> getSendBuffer() {
-		return sendBuffer;
 	}
 	
 }

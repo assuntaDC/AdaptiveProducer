@@ -1,5 +1,8 @@
 package dynamiClientFramework.clients;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.UUID;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -21,13 +24,20 @@ public class DynamicMQTTClient extends DynamicClient {
 	@Override
 	protected void sendMessage(Sample sample) {
         try {
-        	MqttMessage msg = new MqttMessage(sample.toString().getBytes()); 
-            //msg.setQos(0);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(sample);
+            oos.flush();
+            byte [] data = bos.toByteArray();
+        	MqttMessage msg = new MqttMessage(data); 
+            msg.setQos(0);
             //msg.setRetained(true);
 			publisher.publish(super.getDestination(), msg);
 		} catch (MqttPersistenceException e) {
 			e.printStackTrace();
 		} catch (MqttException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		} 
 	}
