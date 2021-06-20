@@ -21,6 +21,11 @@ public class DynamicJMSClient extends DynamicClient {
 	private boolean connected;
 	
 
+	/**
+	 * Creates a JMS Dynamic client
+	 * @param destination queue to connect to.
+	 * @param acceptorAddress Artemis valid acceptor to connect to.
+	 */
 	public DynamicJMSClient(String destination, String acceptorAddress) {
 		super(destination, acceptorAddress);
 	}
@@ -30,9 +35,6 @@ public class DynamicJMSClient extends DynamicClient {
 		return new PollingService(this, pollingPeriod, false);
 	}
 				
-	/**
-	 * Starts connection with the destination queue.
-	 */
 	@Override
 	public void startConnection() {
 		factory = new ActiveMQJMSConnectionFactory(super.getAddress());
@@ -48,10 +50,7 @@ public class DynamicJMSClient extends DynamicClient {
 			e.printStackTrace();
 		}
 	}
-	
-	/**
-	 * Closes connection with the destination queue.
-	 */
+
 	@Override
 	public void closeConnection() {
 		try {

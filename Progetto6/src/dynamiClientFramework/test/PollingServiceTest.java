@@ -18,9 +18,6 @@ import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.api.jms.management.JMSManagementHelper;
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
-import dynamiClientFramework.clients.DynamicClient;
-import dynamiClientFramework.clients.PollingService;
-
 public class PollingServiceTest{
 
 	private long pollingPeriod;

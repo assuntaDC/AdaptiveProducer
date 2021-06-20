@@ -9,14 +9,12 @@ import java.util.List;
 import java.util.Properties;
 
 import dynamiClientFramework.clients.Client;
-import dynamiClientFramework.clients.PollingService;
 import dynamiClientFramework.clients.Sample;
 import dynamiClientFramework.clients.exceptions.InvalidPropertyException;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
 
 public abstract class DynamicClientTest implements Client{
 	
-	//TO TURN PRIVATE
 	public enum State {NORMAL, CONGESTED};
 	public enum Strategy {DROP, AGGREGABLE};
 	public enum Operations {MIN, MAX, SUM, MEAN};
@@ -50,7 +48,6 @@ public abstract class DynamicClientTest implements Client{
 		ps = createPollingService(POLLING_PERIOD, pollingServiceTest);
 	}
 	
-
 	//PUBLIC INTERFACE*****************************/
 	public void trySending(Sample sample){
 		switch(status) {
@@ -267,7 +264,7 @@ public abstract class DynamicClientTest implements Client{
 	}
 
 	
-	//TO DELETE: FOR TEST ONLY
+	//FOR TEST ONLY
 	public String getDestination() {
 		return destination;
 	}

@@ -32,6 +32,11 @@ public abstract class DynamicClient implements Client{
 	private int currMessageCount;
 	private String destination, acceptorAddress;
 		
+	/**
+	 * Create a dynamic client instance and set up its properties.
+	 * @param destination queue/topic name to connect to
+	 * @param acceptorAddress valid Artemis acceptor address
+	 */
 	public DynamicClient(String destination, String acceptorAddress) {
 		this.destination=destination;
 		this.acceptorAddress=acceptorAddress;
@@ -56,12 +61,12 @@ public abstract class DynamicClient implements Client{
 			break;
 		}
 	}
-	
+
 	public void startClient() {
 		startConnection();
 		ps.startPolling();
 	}
-	
+
 	public void stopClient() {
 		ps.stopPolling();
 		closeConnection();
@@ -69,15 +74,33 @@ public abstract class DynamicClient implements Client{
 	
 	public abstract boolean isAlive();
 
+	/**
+	 * Send a message based on the connector chosen by the client.
+	 * @param sample Data to send
+	 */
 	protected abstract void sendMessage(Sample sample);
 	
+	/**
+	 * Start connection to topic/queue based on the connector chosen by the client.
+	 */
 	protected abstract void startConnection();
 
+	/**
+	 * Close connection to topic/queue based on the connector chosen by the client.
+	 */
 	protected abstract void closeConnection();
 	
+	/**
+	 * Create a PollingService object to check and update queue status.
+	 * @param pollingPeriod expressed in milliseconds.
+	 * @return PollingService instance.
+	 */
 	protected abstract PollingService createPollingService(long pollingPeriod);
 	//*********************************************/
 	
+	/**
+	 * Load properties from configuration file located in resources.
+	 */
 	private void loadProperties() {
 		String filename = "config.properties";
 		try (InputStream input = getClass().getClassLoader().getResourceAsStream(filename)) {
@@ -118,127 +141,14 @@ public abstract class DynamicClient implements Client{
 			System.err.println(e.getMessage());
 		}
 	}
-
-	private void handleStrategy(Sample sample) {
-		switch(strategy) {
-			case DROP: 
-				drop(sample);
-				break;
-			case AGGREGABLE:
-				aggregate(sample);
-				break;
-		}
-	}
 	
-	private void drop(Sample sample) {
-		if(sendBuffer.size() < BUFFER_DIM) sendBuffer.add(sample);
-		else emptyBuffer();
-	}
-	
-	private void aggregate(Sample sample) {
-	    sendBuffer.add(sample);
-		if(sendBuffer.size()>=BUFFER_DIM){
-	         Serializable value = computeAggregation();
-	         if(value!=null) {
-	        	 try {
-					sendMessage(new Sample(value, TTL));
-				} catch (InvalidSampleTTLException e) {
-					e.printStackTrace();
-				}
-	         }
-	         sendBuffer.clear();
-		}
-		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
-		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
-	}
-	 
-	private Serializable computeAggregation() {
-		switch(operation) {
-			case MIN: return computeMin();
-			case MAX: return computeMax();
-			case SUM: return computeSum();
-			case MEAN: return computeMean();
-			default: return null;
-		}
-	}
-	
-	private Serializable computeMin() {
-		double min = (double) sendBuffer.get(0).getValue();
-		int validCount = 0;
-		for(int i=1; i<sendBuffer.size(); i++) {
-			Sample s = sendBuffer.get(i);
-			if(s.isValid()) {
-				double value = (double) s.getValue();
-				if(value < min) min = value;
-				validCount++;
-			}
-		}
-		if(validCount>0)//aggregate at least two samples
-			return min;
-		else return null;
-	}
-	
-	private Serializable computeMax() {
-		double max = (double) sendBuffer.get(0).getValue();
-		int validCount = 0;
-		for(int i=1; i<sendBuffer.size(); i++) {
-			Sample s = sendBuffer.get(i);
-			if(s.isValid()) {
-				double value = (double) s.getValue();
-				if(value > max) max = value;
-				validCount++;
-			}
-		}
-		if(validCount>0)//aggregate at least two samples
-			return max;
-		else return null;
-	}
-	
-	private Serializable computeSum() {
-		double sum = 0.0;
-		int validCount = 0;
-		for(Sample s: sendBuffer) {
-			if(s.isValid()) {
-				sum += (Double) s.getValue();
-				validCount++;
-			}
-		}
-		if(validCount>0)//aggregate at least two samples
-			return sum;
-		else return null;
-	}
-	
-	private Serializable computeMean() {
-		double mean = 0.0;
-		int validCount = 0;
-		for(Sample s: sendBuffer) {
-			if(s.isValid()) {
-				mean += (Double) s.getValue();
-				validCount++;
-			}
-		}
-		if(validCount>0) {
-			//aggregate at least two samples
-			mean = mean / (double) validCount;
-			return mean;
-		}
-		else return null;
-	}
-	
-	private void emptyBuffer() {
-		for(Sample sample: sendBuffer)
-			if(sample.isValid()) sendMessage(sample);
-		sendBuffer.clear();
-	} 
-			
 	/**
-	 * Sets congestion status checking messageCount
-	 * @param messageCount number of current messages within the destination queue.
+	 * Sets congestion status checking message count and history variation.
+	 * @param number of current messages within the destination queue.
 	 */
 	public void updateQueueStatus(int messageCount) {	
 		int delta = (messageCount - currMessageCount);
 		currMessageCount=messageCount;
-		//System.out.println("Delta: " + delta);
 		switch(status) {
 			case NORMAL: 
 				if(messageCount>EPSILON) status=State.CONGESTED;
@@ -252,6 +162,152 @@ public abstract class DynamicClient implements Client{
 				break;
 			}
 	}
+
+	/**
+	 * Execute the chosen strategy to reduce congestion.
+	 * @param sample
+	 */
+	private void handleStrategy(Sample sample) {
+		switch(strategy) {
+			case DROP: 
+				drop(sample);
+				break;
+			case AGGREGABLE:
+				aggregate(sample);
+				break;
+		}
+	}
+	
+	/**
+	 * Sends all messages left into sendBuffer, then clear it.
+	 */
+	private void emptyBuffer() {
+		for(Sample sample: sendBuffer)
+			if(sample.isValid()) sendMessage(sample);
+		sendBuffer.clear();
+	} 
+			
+	
+	/**
+	 * Store messages into sendBuffer until it's not full, then try to send valid ones.  
+	 * @param sample Data to store in sendBuffer
+	 */
+	private void drop(Sample sample) {
+		if(sendBuffer.size() < BUFFER_DIM) sendBuffer.add(sample);
+		else emptyBuffer();
+	}
+	
+	/**
+	 * Store messages into sendBuffer until it's not full, then compute aggregation on valid ones.
+	 * @param sample Data to aggregate
+	 */
+	private void aggregate(Sample sample) {
+	    sendBuffer.add(sample);
+		if(sendBuffer.size()>=BUFFER_DIM){
+	         Serializable value = computeAggregation();
+	         if(value!=null) {
+	        	 try {
+					sendMessage(new Sample(value, TTL));
+				} catch (InvalidSampleTTLException e) {
+					e.printStackTrace();
+				}
+	         }
+	         sendBuffer.clear();
+		}
+		//When sendBuffer is empty checks congestion severity to enlarge or reduce buffer dim, increasing storage capacity.
+		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
+		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
+	}
+	 
+	/**
+	 * Compute aggregation operation suggested by user.
+	 * @return
+	 */
+	private Serializable computeAggregation() {
+		switch(operation) {
+			case MIN: return computeMin();
+			case MAX: return computeMax();
+			case SUM: return computeSum();
+			case MEAN: return computeMean();
+			default: return null;
+		}
+	}
+	
+	/**
+	 * Send valid samples with lowest value as aggregation result.
+	 * @return Lowest value among valid samples.
+	 */
+	private Serializable computeMin() {
+		double min = (double) sendBuffer.get(0).getValue();
+		int validCount = 0;
+		for(int i=1; i<sendBuffer.size(); i++) {
+			Sample s = sendBuffer.get(i);
+			if(s.isValid()) {
+				double value = (double) s.getValue();
+				if(value < min) min = value;
+				validCount++;
+			}
+		}
+		if(validCount>0)return min;
+		else return null;
+	}
+	
+	/**
+	 * Send valid samples with highest value as aggregation result.
+	 * @return Highest value among valid samples.
+	 */
+	private Serializable computeMax() {
+		double max = (double) sendBuffer.get(0).getValue();
+		int validCount = 0;
+		for(int i=1; i<sendBuffer.size(); i++) {
+			Sample s = sendBuffer.get(i);
+			if(s.isValid()) {
+				double value = (double) s.getValue();
+				if(value > max) max = value;
+				validCount++;
+			}
+		}
+		if(validCount>0)return max;
+		else return null;
+	}
+	
+	/**
+	 * Send sum of the valid samples as aggregation result.
+	 * @return Valid samples sum.
+	 */
+	private Serializable computeSum() {
+		double sum = 0.0;
+		int validCount = 0;
+		for(Sample s: sendBuffer) {
+			if(s.isValid()) {
+				sum += (Double) s.getValue();
+				validCount++;
+			}
+		}
+		if(validCount>0)return sum;
+		else return null;
+	}
+	
+	/**
+	 * Send mean of the valid samples as aggregation result
+	 * @return Mean of the valid samples.
+	 */
+	private Serializable computeMean() {
+		double mean = 0.0;
+		int validCount = 0;
+		for(Sample s: sendBuffer) {
+			if(s.isValid()) {
+				mean += (Double) s.getValue();
+				validCount++;
+			}
+		}
+		if(validCount>0) {
+			mean = mean / (double) validCount;
+			return mean;
+		}
+		else return null;
+	}
+	
 
 	public String getDestination() {
 		return destination;

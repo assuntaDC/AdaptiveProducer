@@ -30,12 +30,21 @@ public class PollingService{
 	private ScheduledFuture<?> future;
 	private ScheduledExecutorService executor;
 
+	/**
+	 * 
+	 * @param client than requires queue/topic monitoring
+	 * @param pollingPeriod expressed in milliseconds
+	 * @param topic set to true if object has to monitor a topic, false otherwise.
+	 */
 	public PollingService(DynamicClient client, long pollingPeriod, boolean topic){
 		this.client=client;
 		this.pollingPeriod=pollingPeriod;
 		this.topic=topic;
 	}
 
+	/**
+	 * Start queue/topic monitoring, setting up JMS connection to destination.
+	 */
 	public void startPolling(){
 		try {
 			factory = new ActiveMQJMSConnectionFactory(client.getAddress());	
@@ -53,6 +62,9 @@ public class PollingService{
 		}
 	}
 
+	/**
+	 * Stop queue/topic monitoring, closing JMS connection to destination.
+	 */
 	public void stopPolling(){
 		try {
 			future.cancel(false);
@@ -65,13 +77,16 @@ public class PollingService{
 		}		
 	}
 
+	/**
+	 * Checks message count into destination queue and updates client congestion status.
+	 */
 	public void polling() {
 		Message request;
 		try {
 			request = session.createMessage();
 			JMSManagementHelper.putAttribute(request, resourceName + client.getDestination(), "MessageCount");				   
 		    Message reply = requestor.request(request);
-		    int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);		   
+		    int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);
 		    client.updateQueueStatus(messageCount);
 		} catch (JMSException e) {
 			e.printStackTrace();
@@ -80,6 +95,10 @@ public class PollingService{
 		}
 	}
 	
+	/**
+	 * Executes polling if client is alive and connection is up.
+	 * @author Assunta De Caro, Pietro Vitagliano
+	 */
 	private class PollingServiceThread implements Runnable{
 		public void run() {		
 		   try {

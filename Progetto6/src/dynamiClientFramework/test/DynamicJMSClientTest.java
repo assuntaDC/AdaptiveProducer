@@ -8,10 +8,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
-
-import dynamiClientFramework.clients.PollingService;
 import dynamiClientFramework.clients.Sample;
 
 public class DynamicJMSClientTest extends DynamicClientTest {

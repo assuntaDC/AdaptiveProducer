@@ -10,6 +10,12 @@ public class Sample implements Serializable{
 	private long TTL;
 	private long timestamp;
 	
+	/**
+	 * Data wrapper object
+	 * @param value data payload
+	 * @param ttl time to live expressed in milliseconds; defines if a sample is still valid.
+	 * @throws InvalidSampleTTLException ttl must be greater than 0
+	 */
 	public Sample(Serializable value, long ttl)throws InvalidSampleTTLException{
 		if(ttl<=0) throw new InvalidSampleTTLException();
 		this.value = value;
@@ -21,6 +27,10 @@ public class Sample implements Serializable{
 		return value.toString();
 	}
 	
+	/**
+	 * Checks if a sample is expired or still valid, using ttl.
+	 * @return true if a sample is still valid, false otherwise.
+	 */
 	public boolean isValid() {
 		boolean valid=false;
 		if((System.currentTimeMillis() - timestamp)<=TTL) valid=true;
@@ -41,13 +51,5 @@ public class Sample implements Serializable{
 
 	public void setTTL(long ttl) {
 		TTL = ttl;
-	}
-
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
 	}
 }

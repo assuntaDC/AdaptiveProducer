@@ -12,9 +12,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-
-import dynamiClientFramework.clients.DynamicClient;
-import dynamiClientFramework.clients.PollingService;
 import dynamiClientFramework.clients.Sample;
 
 public class DynamicMQTTClientTest extends DynamicClientTest {

@@ -17,6 +17,11 @@ public class DynamicMQTTClient extends DynamicClient {
 	
 	private IMqttClient publisher;
 
+	/**
+	 * Creates a DynamicMQTTClient instance.
+	 * @param destination topic to connect to.
+	 * @param acceptorAddress Artemis valid acceptor address.
+	 */
 	public DynamicMQTTClient(String destination, String acceptorAddress) {
 		super(destination, acceptorAddress);
 	}
