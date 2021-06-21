@@ -9,7 +9,7 @@ public class Sample implements Serializable{
 	private Serializable value;
 	private long TTL;
 	private long timestamp;
-	
+
 	/**
 	 * Data wrapper object
 	 * @param value data payload
@@ -22,11 +22,11 @@ public class Sample implements Serializable{
 		this.TTL = ttl;
 		timestamp = System.currentTimeMillis();
 	};
-		
+
 	public String toString() {
 		return value.toString();
 	}
-	
+
 	/**
 	 * Checks if a sample is expired or still valid, using ttl.
 	 * @return true if a sample is still valid, false otherwise.

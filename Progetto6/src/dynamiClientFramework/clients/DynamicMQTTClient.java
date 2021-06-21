@@ -14,7 +14,7 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 public class DynamicMQTTClient extends DynamicClient {
-	
+
 	private IMqttClient publisher;
 
 	/**
@@ -28,15 +28,15 @@ public class DynamicMQTTClient extends DynamicClient {
 
 	@Override
 	protected void sendMessage(Sample sample) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(sample);
-            oos.flush();
-            byte [] data = bos.toByteArray();
-        	MqttMessage msg = new MqttMessage(data); 
-            msg.setQos(0);
-            //msg.setRetained(true);
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(bos);
+			oos.writeObject(sample);
+			oos.flush();
+			byte [] data = bos.toByteArray();
+			MqttMessage msg = new MqttMessage(data); 
+			msg.setQos(0);
+			//msg.setRetained(true);
 			publisher.publish(super.getDestination(), msg);
 		} catch (MqttPersistenceException e) {
 			e.printStackTrace();
@@ -67,7 +67,7 @@ public class DynamicMQTTClient extends DynamicClient {
 	@Override
 	protected void closeConnection() {
 		try {
-	        //publisher.close();
+			//publisher.close();
 			publisher.disconnect();
 		} catch (MqttException e) {
 			e.printStackTrace();
@@ -76,7 +76,7 @@ public class DynamicMQTTClient extends DynamicClient {
 
 	@Override
 	protected PollingService createPollingService(long pollingPeriod) {
-		return new PollingService(this, pollingPeriod, true);
+		return new PollingService(this, pollingPeriod);
 	}
 
 	@Override

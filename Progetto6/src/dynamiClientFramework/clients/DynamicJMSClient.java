@@ -12,14 +12,14 @@ import javax.jms.Session;
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
 public class DynamicJMSClient extends DynamicClient {
-		
+
 	private Queue destination;
 	private QueueSender sender;
 	private QueueConnection connection;
 	private QueueSession session;
 	private QueueConnectionFactory factory;
 	private boolean connected;
-	
+
 
 	/**
 	 * Creates a JMS Dynamic client
@@ -29,12 +29,12 @@ public class DynamicJMSClient extends DynamicClient {
 	public DynamicJMSClient(String destination, String acceptorAddress) {
 		super(destination, acceptorAddress);
 	}
-	
+
 	@Override
 	protected PollingService createPollingService(long pollingPeriod) {
-		return new PollingService(this, pollingPeriod, false);
+		return new PollingService(this, pollingPeriod);
 	}
-				
+
 	@Override
 	public void startConnection() {
 		factory = new ActiveMQJMSConnectionFactory(super.getAddress());
@@ -45,7 +45,7 @@ public class DynamicJMSClient extends DynamicClient {
 			sender = session.createSender(destination);	
 			connection.start();
 			connected=true;
-			} catch (JMSException e) {
+		} catch (JMSException e) {
 			System.err.println("Cannot start connection to " + super.getDestination() + " queue\n");
 			e.printStackTrace();
 		}
@@ -63,7 +63,7 @@ public class DynamicJMSClient extends DynamicClient {
 			e.printStackTrace();
 		}
 	}
-	
+
 
 	@Override
 	protected void sendMessage(Sample sample) {

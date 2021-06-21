@@ -13,14 +13,14 @@ import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
 
 
 public abstract class DynamicClient implements Client{
-	
+
 	private enum State {NORMAL, CONGESTED};
 	private enum Strategy {DROP, AGGREGABLE};
 	private enum Operations {MIN, MAX, SUM, MEAN};
-	
+
 	private int EPSILON;
 	private int BUFFER_DIM;
-	private boolean aggressiveStrategy = false;
+	private boolean aggressiveStrategy;
 	private int MAX_BUFFER_DIM;
 	private long TTL;	
 	private long POLLING_PERIOD;
@@ -31,7 +31,7 @@ public abstract class DynamicClient implements Client{
 	private	PollingService ps; 
 	private int currMessageCount;
 	private String destination, acceptorAddress;
-		
+
 	/**
 	 * Create a dynamic client instance and set up its properties.
 	 * @param destination queue/topic name to connect to
@@ -42,12 +42,13 @@ public abstract class DynamicClient implements Client{
 		this.acceptorAddress=acceptorAddress;
 		loadProperties();
 		MAX_BUFFER_DIM = BUFFER_DIM * 2;
+		aggressiveStrategy=false;
 		sendBuffer = new ArrayList<Sample>();
 		status = State.NORMAL;
 		currMessageCount = 0;
 		ps = createPollingService(POLLING_PERIOD);
 	}
-	
+
 
 	//PUBLIC INTERFACE*****************************/
 	public void trySending(Sample sample){
@@ -71,6 +72,7 @@ public abstract class DynamicClient implements Client{
 		ps.stopPolling();
 		closeConnection();
 	}
+	//***********************************************/
 	
 	public abstract boolean isAlive();
 
@@ -79,7 +81,7 @@ public abstract class DynamicClient implements Client{
 	 * @param sample Data to send
 	 */
 	protected abstract void sendMessage(Sample sample);
-	
+
 	/**
 	 * Start connection to topic/queue based on the connector chosen by the client.
 	 */
@@ -89,7 +91,7 @@ public abstract class DynamicClient implements Client{
 	 * Close connection to topic/queue based on the connector chosen by the client.
 	 */
 	protected abstract void closeConnection();
-	
+
 	/**
 	 * Create a PollingService object to check and update queue status.
 	 * @param pollingPeriod expressed in milliseconds.
@@ -97,51 +99,51 @@ public abstract class DynamicClient implements Client{
 	 */
 	protected abstract PollingService createPollingService(long pollingPeriod);
 	//*********************************************/
-	
+
 	/**
 	 * Load properties from configuration file located in resources.
 	 */
 	private void loadProperties() {
 		String filename = "config.properties";
 		try (InputStream input = getClass().getClassLoader().getResourceAsStream(filename)) {
-            Properties prop = new Properties();
-            if (input == null) throw new FileNotFoundException();
-            
-            prop.load(input);
-            EPSILON = Integer.parseInt(prop.getProperty("epsilon"));
-            if(EPSILON<=0) throw new InvalidPropertyException("Epsilon must be greater than 0.");
+			Properties prop = new Properties();
+			if (input == null) throw new FileNotFoundException();
 
-            BUFFER_DIM = Integer.parseInt(prop.getProperty("bufferDim"));
-            if(BUFFER_DIM<=0) throw new InvalidPropertyException("Buffer dim must be greater than 0.");
-            
-            POLLING_PERIOD = Long.parseLong(prop.getProperty("pollingPeriod"));
-            if(POLLING_PERIOD<=0) throw new InvalidPropertyException("Polling period must be greater than 0.");
+			prop.load(input);
+			EPSILON = Integer.parseInt(prop.getProperty("epsilon"));
+			if(EPSILON<=0) throw new InvalidPropertyException("Epsilon must be greater than 0.");
 
-            TTL = Long.parseLong(prop.getProperty("TTL"));
-            if(TTL<=0) throw new InvalidPropertyException("Sample TTL must be greater than 0.");
+			BUFFER_DIM = Integer.parseInt(prop.getProperty("bufferDim"));
+			if(BUFFER_DIM<=0) throw new InvalidPropertyException("Buffer dim must be greater than 0.");
 
-            switch(prop.getProperty("strategy")) {
-	            case "AGGREGABLE": strategy=Strategy.AGGREGABLE; break;
-	            case "DROP": strategy= Strategy.DROP; break;
-	            default: throw new InvalidPropertyException("Strategy malformed. Use: AGGREGABLE or DROP."); 
-            }
-            
-            switch(prop.getProperty("aggregationType")) {
-	            case "MIN": operation=Operations.MIN; break;
-	            case "MAX": operation=Operations.MAX; break;
-	            case "SUM": operation=Operations.SUM; break;
-	            case "MEAN": operation=Operations.MEAN; break;
-	            default: throw new InvalidPropertyException("Aggregation type malformed. Use: MAX, MIN, SUM or MEAN."); 
-	        }  
-        } catch (FileNotFoundException ex) {
-            System.err.println("Sorry, unable to find " + filename);
-        } catch (IOException e) {
-            System.err.println("Property file malformed.");
+			POLLING_PERIOD = Long.parseLong(prop.getProperty("pollingPeriod"));
+			if(POLLING_PERIOD<=0) throw new InvalidPropertyException("Polling period must be greater than 0.");
+
+			TTL = Long.parseLong(prop.getProperty("TTL"));
+			if(TTL<=0) throw new InvalidPropertyException("Sample TTL must be greater than 0.");
+
+			switch(prop.getProperty("strategy")) {
+			case "AGGREGABLE": strategy=Strategy.AGGREGABLE; break;
+			case "DROP": strategy= Strategy.DROP; break;
+			default: throw new InvalidPropertyException("Strategy malformed. Use: AGGREGABLE or DROP."); 
+			}
+
+			switch(prop.getProperty("aggregationType")) {
+			case "MIN": operation=Operations.MIN; break;
+			case "MAX": operation=Operations.MAX; break;
+			case "SUM": operation=Operations.SUM; break;
+			case "MEAN": operation=Operations.MEAN; break;
+			default: throw new InvalidPropertyException("Aggregation type malformed. Use: MAX, MIN, SUM or MEAN."); 
+			}  
+		} catch (FileNotFoundException ex) {
+			System.err.println("Sorry, unable to find " + filename);
+		} catch (IOException e) {
+			System.err.println("Property file malformed.");
 		} catch (InvalidPropertyException e) {
 			System.err.println(e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * Sets congestion status checking message count and history variation.
 	 * @param number of current messages within the destination queue.
@@ -150,17 +152,17 @@ public abstract class DynamicClient implements Client{
 		int delta = (messageCount - currMessageCount);
 		currMessageCount=messageCount;
 		switch(status) {
-			case NORMAL: 
-				if(messageCount>EPSILON) status=State.CONGESTED;
-				break;
-			case CONGESTED:
-				if(delta<=0) {
-					if(messageCount<=EPSILON) status=State.NORMAL;
-					else aggressiveStrategy=false;
-				}
-				else if(delta>0) aggressiveStrategy=true;
-				break;
+		case NORMAL: 
+			if(messageCount>EPSILON) status=State.CONGESTED;
+			break;
+		case CONGESTED:
+			if(delta<=0) {
+				if(messageCount<=EPSILON) status=State.NORMAL;
+				else aggressiveStrategy=false;
 			}
+			else if(delta>0) aggressiveStrategy=true;
+			break;
+		}
 	}
 
 	/**
@@ -169,15 +171,15 @@ public abstract class DynamicClient implements Client{
 	 */
 	private void handleStrategy(Sample sample) {
 		switch(strategy) {
-			case DROP: 
-				drop(sample);
-				break;
-			case AGGREGABLE:
-				aggregate(sample);
-				break;
+		case DROP: 
+			drop(sample);
+			break;
+		case AGGREGABLE:
+			aggregate(sample);
+			break;
 		}
 	}
-	
+
 	/**
 	 * Sends all messages left into sendBuffer, then clear it.
 	 */
@@ -186,8 +188,8 @@ public abstract class DynamicClient implements Client{
 			if(sample.isValid()) sendMessage(sample);
 		sendBuffer.clear();
 	} 
-			
-	
+
+
 	/**
 	 * Store messages into sendBuffer until it's not full, then try to send valid ones.  
 	 * @param sample Data to store in sendBuffer
@@ -196,43 +198,43 @@ public abstract class DynamicClient implements Client{
 		if(sendBuffer.size() < BUFFER_DIM) sendBuffer.add(sample);
 		else emptyBuffer();
 	}
-	
+
 	/**
 	 * Store messages into sendBuffer until it's not full, then compute aggregation on valid ones.
 	 * @param sample Data to aggregate
 	 */
 	private void aggregate(Sample sample) {
-	    sendBuffer.add(sample);
+		sendBuffer.add(sample);
 		if(sendBuffer.size()>=BUFFER_DIM){
-	         Serializable value = computeAggregation();
-	         if(value!=null) {
-	        	 try {
+			Serializable value = computeAggregation();
+			if(value!=null) {
+				try {
 					sendMessage(new Sample(value, TTL));
 				} catch (InvalidSampleTTLException e) {
 					e.printStackTrace();
 				}
-	         }
-	         sendBuffer.clear();
+			}
+			sendBuffer.clear();
 		}
 		//When sendBuffer is empty checks congestion severity to enlarge or reduce buffer dim, increasing storage capacity.
 		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
 		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
 	}
-	 
+
 	/**
 	 * Compute aggregation operation suggested by user.
 	 * @return
 	 */
 	private Serializable computeAggregation() {
 		switch(operation) {
-			case MIN: return computeMin();
-			case MAX: return computeMax();
-			case SUM: return computeSum();
-			case MEAN: return computeMean();
-			default: return null;
+		case MIN: return computeMin();
+		case MAX: return computeMax();
+		case SUM: return computeSum();
+		case MEAN: return computeMean();
+		default: return null;
 		}
 	}
-	
+
 	/**
 	 * Send valid samples with lowest value as aggregation result.
 	 * @return Lowest value among valid samples.
@@ -251,7 +253,7 @@ public abstract class DynamicClient implements Client{
 		if(validCount>0)return min;
 		else return null;
 	}
-	
+
 	/**
 	 * Send valid samples with highest value as aggregation result.
 	 * @return Highest value among valid samples.
@@ -270,7 +272,7 @@ public abstract class DynamicClient implements Client{
 		if(validCount>0)return max;
 		else return null;
 	}
-	
+
 	/**
 	 * Send sum of the valid samples as aggregation result.
 	 * @return Valid samples sum.
@@ -287,7 +289,7 @@ public abstract class DynamicClient implements Client{
 		if(validCount>0)return sum;
 		else return null;
 	}
-	
+
 	/**
 	 * Send mean of the valid samples as aggregation result
 	 * @return Mean of the valid samples.
@@ -307,7 +309,7 @@ public abstract class DynamicClient implements Client{
 		}
 		else return null;
 	}
-	
+
 
 	public String getDestination() {
 		return destination;
@@ -316,5 +318,5 @@ public abstract class DynamicClient implements Client{
 	public String getAddress() {
 		return acceptorAddress;
 	}
-	
+
 }

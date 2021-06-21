@@ -73,13 +73,14 @@ public class PollingServiceTest{
 		Message request;
 		try {
 			request = session.createMessage();
-			JMSManagementHelper.putAttribute(request, resourceName + client.getDestination(), "MessageCount");				   
+			JMSManagementHelper.putAttribute(request, ResourceNames.ADDRESS + client.getDestination(), "MessageCount");				   
 			Message reply = requestor.request(request);
 			int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);		      		   
 			System.out.println("\n" + client.getDestination() + " contains " + messageCount + " messages.");
 			client.updateQueueStatus(messageCount);
 
 			if(test) {
+				System.out.println(resourceName);
 				System.out.println("Congestion Status: " + client.getStatus().toString());
 				System.out.println("Strategy: " + client.getStrategy().toString());
 				System.out.println("SendBuffer Size: " + client.getBUFFER_DIM());

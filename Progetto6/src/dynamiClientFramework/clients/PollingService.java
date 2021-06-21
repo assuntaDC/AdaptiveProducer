@@ -20,8 +20,6 @@ import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
 public class PollingService{
 	private long pollingPeriod;
-	private String resourceName;
-	private boolean topic;
 	private DynamicClient client;
 	private QueueConnectionFactory factory;
 	private QueueSession session;
@@ -36,10 +34,9 @@ public class PollingService{
 	 * @param pollingPeriod expressed in milliseconds
 	 * @param topic set to true if object has to monitor a topic, false otherwise.
 	 */
-	public PollingService(DynamicClient client, long pollingPeriod, boolean topic){
+	public PollingService(DynamicClient client, long pollingPeriod){
 		this.client=client;
 		this.pollingPeriod=pollingPeriod;
-		this.topic=topic;
 	}
 
 	/**
@@ -53,8 +50,6 @@ public class PollingService{
 			session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 			Queue managementQueue = session.createQueue("activemq.management");
 			requestor = new QueueRequestor(session, managementQueue);
-			if(topic) resourceName = ResourceNames.ADDRESS;
-			else resourceName = ResourceNames.QUEUE;
 			executor = Executors.newSingleThreadScheduledExecutor();
 			future = executor.scheduleWithFixedDelay(new PollingServiceThread(), 0, pollingPeriod, TimeUnit.MILLISECONDS);					
 		} catch (JMSException e) {
@@ -84,28 +79,28 @@ public class PollingService{
 		Message request;
 		try {
 			request = session.createMessage();
-			JMSManagementHelper.putAttribute(request, resourceName + client.getDestination(), "MessageCount");				   
-		    Message reply = requestor.request(request);
-		    int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);
-		    client.updateQueueStatus(messageCount);
+			JMSManagementHelper.putAttribute(request, ResourceNames.ADDRESS + client.getDestination(), "MessageCount");				   
+			Message reply = requestor.request(request);
+			int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);
+			client.updateQueueStatus(messageCount);
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Executes polling if client is alive and connection is up.
 	 * @author Assunta De Caro, Pietro Vitagliano
 	 */
 	private class PollingServiceThread implements Runnable{
 		public void run() {		
-		   try {
-			   	if(client.isAlive()) polling();
-			    }catch(Exception e) {
-			   System.err.println(e);
-		   }
+			try {
+				if(client.isAlive()) polling();
+			}catch(Exception e) {
+				System.err.println(e);
+			}
 		}
 	}
 
