@@ -27,7 +27,7 @@ public class DynamicJMSClientTest extends DynamicClientTest {
 	
 	@Override
 	protected PollingServiceTest createPollingService(long pollingPeriod, boolean pollingServiceTest) {
-		return new PollingServiceTest(this, pollingPeriod, false, pollingServiceTest);
+		return new PollingServiceTest(this, pollingPeriod, pollingServiceTest);
 	}
 
 				

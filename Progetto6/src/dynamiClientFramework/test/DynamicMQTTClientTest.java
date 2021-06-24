@@ -72,7 +72,7 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 
 	@Override
 	protected PollingServiceTest createPollingService(long pollingPeriod, boolean pollingServiceTest) {
-		return new PollingServiceTest(this, pollingPeriod, true, pollingServiceTest);
+		return new PollingServiceTest(this, pollingPeriod, pollingServiceTest);
 	}
 
 	

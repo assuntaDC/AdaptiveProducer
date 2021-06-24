@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import dynamiClientFramework.clients.exceptions.InvalidPropertyException;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
+import dynamiClientFramework.test.DynamicClientTest.State;
 
 
 public abstract class DynamicClient implements Client{
@@ -20,6 +21,7 @@ public abstract class DynamicClient implements Client{
 
 	private int EPSILON;
 	private int BUFFER_DIM;
+	private int DECREASE_COUNT;
 	private boolean aggressiveStrategy;
 	private int MAX_BUFFER_DIM;
 	private long TTL;	
@@ -29,7 +31,7 @@ public abstract class DynamicClient implements Client{
 	private Operations operation;
 	protected List<Sample> sendBuffer;
 	private	PollingService ps; 
-	private int currMessageCount;
+	private int currMessageCount, decreaseCount;
 	private String destination, acceptorAddress;
 
 	/**
@@ -46,6 +48,7 @@ public abstract class DynamicClient implements Client{
 		sendBuffer = new ArrayList<Sample>();
 		status = State.NORMAL;
 		currMessageCount = 0;
+		decreaseCount = 0;
 		ps = createPollingService(POLLING_PERIOD);
 	}
 
@@ -112,6 +115,9 @@ public abstract class DynamicClient implements Client{
 			prop.load(input);
 			EPSILON = Integer.parseInt(prop.getProperty("epsilon"));
 			if(EPSILON<=0) throw new InvalidPropertyException("Epsilon must be greater than 0.");
+			
+			DECREASE_COUNT = Integer.parseInt(prop.getProperty("decreaseCount"));
+			if(DECREASE_COUNT<=0) throw new InvalidPropertyException("DecreaseCount must be greater than 0.");
 
 			BUFFER_DIM = Integer.parseInt(prop.getProperty("bufferDim"));
 			if(BUFFER_DIM<=0) throw new InvalidPropertyException("Buffer dim must be greater than 0.");
@@ -151,17 +157,39 @@ public abstract class DynamicClient implements Client{
 	public void updateQueueStatus(int messageCount) {	
 		int delta = (messageCount - currMessageCount);
 		currMessageCount=messageCount;
+		//System.out.println("Delta: " + delta);
 		switch(status) {
-		case NORMAL: 
-			if(messageCount>EPSILON) status=State.CONGESTED;
-			break;
-		case CONGESTED:
-			if(delta<=0) {
-				if(messageCount<=EPSILON) status=State.NORMAL;
-				else aggressiveStrategy=false;
+			case NORMAL: 
+				if(messageCount>EPSILON) status=State.CONGESTED;
+				decreaseCount = 0;
+				break;
+			case CONGESTED:
+				if(delta<=0) {
+					decreaseCount++;
+					if(messageCount<=EPSILON) status=State.NORMAL;
+					else if(decreaseCount == DECREASE_COUNT) {
+						aggressiveStrategy=false;
+					}
+				}
+				else if(delta>0) {
+					aggressiveStrategy=true;
+					decreaseCount = 0;
+				}
+				
+				break;
 			}
-			else if(delta>0) aggressiveStrategy=true;
-			break;
+		
+		//If strategy must be more aggressive, we need to extend buffer dimension.
+		//If strategy must be less aggressive, we need to reduce buffer dimension;
+		//before resizing it, we must be sure there are no more sample than buffer half dim.
+		//In this case, we have to aggregate sample or empty the buffer, otherwise we can reduce its length.
+		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
+		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) {
+			if(sendBuffer.size()==BUFFER_DIM) {
+				if(strategy==Strategy.AGGREGABLE) aggregate();
+				else emptyBuffer();
+			}
+			BUFFER_DIM /=2;
 		}
 	}
 
@@ -175,18 +203,32 @@ public abstract class DynamicClient implements Client{
 			drop(sample);
 			break;
 		case AGGREGABLE:
-			aggregate(sample);
+			sendBuffer.add(sample);
+			aggregate();
 			break;
 		}
 	}
 
 	/**
-	 * Sends all messages left into sendBuffer, then clear it.
+	 * Send messages left into sendBuffer, then clear it.
 	 */
 	private void emptyBuffer() {
-		for(Sample sample: sendBuffer)
-			if(sample.isValid()) sendMessage(sample);
-		sendBuffer.clear();
+		//If message number is smaller than half of BUFFER_DIM, send all of them.
+		int i;
+		if(sendBuffer.size()<=BUFFER_DIM/2) {
+			for(Sample sample: sendBuffer) {
+				if(sample.isValid()) sendMessage(sample);
+			}
+			sendBuffer.clear();
+		}
+		//if message number is greater than half of BUFFER_DIM, send some of them
+		else {
+			for(i=0; i<BUFFER_DIM/2; i++){
+				Sample sample = sendBuffer.get(i);
+				if(sample!=null && sample.isValid()) sendMessage(sample);
+			}
+			for(int j = i; j>=0; j--) sendBuffer.remove(j);
+		}
 	} 
 
 
@@ -196,15 +238,17 @@ public abstract class DynamicClient implements Client{
 	 */
 	private void drop(Sample sample) {
 		if(sendBuffer.size() < BUFFER_DIM) sendBuffer.add(sample);
-		else emptyBuffer();
+		else {
+			emptyBuffer();
+			sendBuffer.add(sample);
+		}
 	}
 
 	/**
 	 * Store messages into sendBuffer until it's not full, then compute aggregation on valid ones.
 	 * @param sample Data to aggregate
 	 */
-	private void aggregate(Sample sample) {
-		sendBuffer.add(sample);
+	private void aggregate() {
 		if(sendBuffer.size()>=BUFFER_DIM){
 			Serializable value = computeAggregation();
 			if(value!=null) {
@@ -217,8 +261,8 @@ public abstract class DynamicClient implements Client{
 			sendBuffer.clear();
 		}
 		//When sendBuffer is empty checks congestion severity to enlarge or reduce buffer dim, increasing storage capacity.
-		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
-		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
+		//if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
+		//else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
 	}
 
 	/**

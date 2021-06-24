@@ -97,7 +97,8 @@ public class PollingService{
 	private class PollingServiceThread implements Runnable{
 		public void run() {		
 			try {
-				if(client.isAlive()) polling();
+				//if(client.isAlive()) polling();
+				polling();
 			}catch(Exception e) {
 				System.err.println(e);
 			}

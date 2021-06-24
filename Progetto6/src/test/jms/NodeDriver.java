@@ -47,7 +47,7 @@ public class NodeDriver{
 		public void run() {
 			int temperature = (int) ((int)(Math.random() * range) + min);
 			try {
-				Sample sample = new Sample(temperature, 2000);
+				Sample sample = new Sample(temperature, 500);
 				dclient.trySending(sample);
 				//System.out.println(java.time.LocalTime.now() + " Node n." + nodeId + " - Produced mex n." + id + " : " + temperature + " C");
 				id++;

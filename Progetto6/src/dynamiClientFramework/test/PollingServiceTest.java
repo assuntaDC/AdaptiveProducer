@@ -21,8 +21,6 @@ import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 public class PollingServiceTest{
 
 	private long pollingPeriod;
-	private String resourceName;
-	private boolean topic;
 	private DynamicClientTest client;
 	private QueueConnectionFactory factory;
 	private QueueSession session;
@@ -31,12 +29,13 @@ public class PollingServiceTest{
 	private ScheduledFuture<?> future;
 	private ScheduledExecutorService executor;
 	private boolean test;
+	private Metric m;
 
-	public PollingServiceTest(DynamicClientTest client, long pollingPeriod, boolean topic, boolean test){
+	public PollingServiceTest(DynamicClientTest client, long pollingPeriod, boolean test){
 		this.client=client;
 		this.pollingPeriod=pollingPeriod;
-		this.topic=topic;
 		this.test = test;
+		
 	}
 
 	public void startPolling(){
@@ -47,8 +46,8 @@ public class PollingServiceTest{
 			session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
 			Queue managementQueue = session.createQueue("activemq.management");
 			requestor = new QueueRequestor(session, managementQueue);
-			if(topic) resourceName = ResourceNames.ADDRESS;
-			else resourceName = ResourceNames.QUEUE;
+			m =  new Metric(1);
+			if(client.getStatus()==DynamicClientTest.State.CONGESTED) m.startCongestionTimer();
 			executor = Executors.newSingleThreadScheduledExecutor();
 			future = executor.scheduleWithFixedDelay(new PollingServiceThread(), 0, pollingPeriod, TimeUnit.MILLISECONDS);					
 		} catch (JMSException e) {
@@ -58,6 +57,8 @@ public class PollingServiceTest{
 
 	public void stopPolling(){
 		try {
+			m.stopCongestionTimer();
+			m.print();
 			future.cancel(false);
 			executor.shutdown();
 			requestor.close();
@@ -80,7 +81,7 @@ public class PollingServiceTest{
 			client.updateQueueStatus(messageCount);
 
 			if(test) {
-				System.out.println(resourceName);
+				m.trackQueueCount(messageCount);
 				System.out.println("Congestion Status: " + client.getStatus().toString());
 				System.out.println("Strategy: " + client.getStrategy().toString());
 				System.out.println("SendBuffer Size: " + client.getBUFFER_DIM());
@@ -89,6 +90,8 @@ public class PollingServiceTest{
 				System.out.println("Aggregate mex: " + client.getAggregateCount());
 				System.out.println("Aggregate Sent: " + client.getAggregateSent());
 				System.out.println("Invalid mex: " + client.getInvalidCount()+"\n");
+				if(client.getStatus()==DynamicClientTest.State.CONGESTED) m.startCongestionTimer();
+				else m.stopCongestionTimer();
 			}
 			//System.out.println("Drop count: " + sup + "\n "); 
 

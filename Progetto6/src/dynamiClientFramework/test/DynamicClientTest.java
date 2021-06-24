@@ -30,7 +30,7 @@ public abstract class DynamicClientTest implements Client{
 	private Operations operation;
 	protected List<Sample> sendBuffer;
 	private	PollingServiceTest ps; 
-	private int currMessageCount;
+	private int currMessageCount, decreaseCount;
 	private String destination, acceptorAddress;
 	
 	private int aggregateCount = 0;	
@@ -45,6 +45,7 @@ public abstract class DynamicClientTest implements Client{
 		sendBuffer = new ArrayList<Sample>();
 		status = State.NORMAL;
 		currMessageCount = 0;
+		decreaseCount = 0;
 		ps = createPollingService(POLLING_PERIOD, pollingServiceTest);
 	}
 	
@@ -129,19 +130,22 @@ public abstract class DynamicClientTest implements Client{
 				drop(sample);
 				break;
 			case AGGREGABLE:
-				aggregate(sample);
+			    sendBuffer.add(sample);
+				aggregate();
 				break;
 		}
 	}
 	
 	private void drop(Sample sample) {
 		if(sendBuffer.size() < BUFFER_DIM) sendBuffer.add(sample);
-		else emptyBuffer();
+		else {
+			emptyBuffer();
+			sendBuffer.add(sample);
+		}
 	}
 	
-	private void aggregate(Sample sample) {
+	private void aggregate() {
 		aggregateCount++;
-	    sendBuffer.add(sample);
 		if(sendBuffer.size()>=BUFFER_DIM){
 	         Serializable value = computeAggregation();
 	         if(value!=null) {
@@ -154,8 +158,6 @@ public abstract class DynamicClientTest implements Client{
 	         }
 	         sendBuffer.clear();
 		}
-		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
-		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
 	}
 	 
 	private Serializable computeAggregation() {
@@ -232,13 +234,35 @@ public abstract class DynamicClientTest implements Client{
 	}
 	
 	private void emptyBuffer() {
-		for(Sample sample: sendBuffer)
+		
+		int i;
+		if(sendBuffer.size()<=BUFFER_DIM/2) {
+			for(Sample sample: sendBuffer) {
+				if(sample.isValid()) {
+					aggregateCount--;
+					sendMessage(sample);
+				}else invalidCount++;
+			}
+			sendBuffer.clear();
+		}
+		else {
+			for(i=0; i<BUFFER_DIM/2; i++){
+				Sample sample = sendBuffer.get(i);
+				if(sample!=null && sample.isValid()) {
+					sendMessage(sample);
+					aggregateCount--;
+				}else if(sample!=null) invalidCount++;
+			}
+			for(int j = i; j>=0; j--) sendBuffer.remove(j);
+		}
+		
+		/*for(Sample sample: sendBuffer)
 			if(sample.isValid()) {
 				sendMessage(sample);
 				aggregateCount--;
 			}
 			else invalidCount++;
-		sendBuffer.clear();
+		sendBuffer.clear();*/
 	} 
 			
 	/**
@@ -252,15 +276,35 @@ public abstract class DynamicClientTest implements Client{
 		switch(status) {
 			case NORMAL: 
 				if(messageCount>EPSILON) status=State.CONGESTED;
+				decreaseCount = 0;
 				break;
 			case CONGESTED:
 				if(delta<=0) {
+					decreaseCount++;
 					if(messageCount<=EPSILON) status=State.NORMAL;
-					else aggressiveStrategy=false;
+					else if(decreaseCount == 5) {
+						aggressiveStrategy=false;
+					}
 				}
-				else if(delta>0) aggressiveStrategy=true;
+				else if(delta>0) {
+					aggressiveStrategy=true;
+					decreaseCount = 0;
+				}
 				break;
 			}
+		
+		//If strategy must be more aggressive, we need to extend buffer dimension.
+		//If strategy must be less aggressive, we need to reduce buffer dimension;
+		//before resizing it, we must be sure there are no more sample than buffer half dim.
+		//In this case, we have to aggregate sample or empty the buffer, otherwise we can reduce its length.
+		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
+		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) {
+			if(sendBuffer.size()>=BUFFER_DIM) {
+				if(strategy==Strategy.AGGREGABLE) aggregate();
+				else emptyBuffer();
+			}
+			BUFFER_DIM /=2;
+		}
 	}
 
 	
