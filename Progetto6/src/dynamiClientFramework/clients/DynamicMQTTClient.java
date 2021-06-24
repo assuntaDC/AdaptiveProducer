@@ -75,11 +75,6 @@ public class DynamicMQTTClient extends DynamicClient {
 	}
 
 	@Override
-	protected PollingService createPollingService(long pollingPeriod) {
-		return new PollingService(this, pollingPeriod);
-	}
-
-	@Override
 	public boolean isAlive() {
 		return publisher.isConnected();
 	}

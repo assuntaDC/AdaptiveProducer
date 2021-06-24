@@ -21,6 +21,7 @@ public abstract class DynamicClientTest implements Client{
 	
 	private int EPSILON;
 	private int BUFFER_DIM;
+	private int CONSECUTIVE_DECREASES;
 	private boolean aggressiveStrategy = false;
 	private int MAX_BUFFER_DIM;
 	private long TTL;	
@@ -92,6 +93,9 @@ public abstract class DynamicClientTest implements Client{
             prop.load(input);
             EPSILON = Integer.parseInt(prop.getProperty("epsilon"));
             if(EPSILON<=0) throw new InvalidPropertyException("Epsilon must be greater than 0.");
+            
+            CONSECUTIVE_DECREASES = Integer.parseInt(prop.getProperty("consecutiveDecreases"));
+			if(CONSECUTIVE_DECREASES<=0) throw new InvalidPropertyException("ConsecutiveDecreases must be greater than 0.");
 
             BUFFER_DIM = Integer.parseInt(prop.getProperty("bufferDim"));
             if(BUFFER_DIM<=0) throw new InvalidPropertyException("Buffer dim must be greater than 0.");
@@ -282,7 +286,7 @@ public abstract class DynamicClientTest implements Client{
 				if(delta<=0) {
 					decreaseCount++;
 					if(messageCount<=EPSILON) status=State.NORMAL;
-					else if(decreaseCount == 5) {
+					else if(decreaseCount == CONSECUTIVE_DECREASES) {
 						aggressiveStrategy=false;
 					}
 				}

@@ -31,11 +31,6 @@ public class DynamicJMSClient extends DynamicClient {
 	}
 
 	@Override
-	protected PollingService createPollingService(long pollingPeriod) {
-		return new PollingService(this, pollingPeriod);
-	}
-
-	@Override
 	public void startConnection() {
 		factory = new ActiveMQJMSConnectionFactory(super.getAddress());
 		try {
