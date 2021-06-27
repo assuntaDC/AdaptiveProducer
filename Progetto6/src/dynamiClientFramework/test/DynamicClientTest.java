@@ -69,6 +69,7 @@ public abstract class DynamicClientTest implements Client{
 	}
 	
 	public void stopClient() {
+		while(!sendBuffer.isEmpty()) emptyBuffer();
 		ps.stopPolling();
 		closeConnection();
 	}
@@ -285,9 +286,13 @@ public abstract class DynamicClientTest implements Client{
 			case CONGESTED:
 				if(delta<=0) {
 					decreaseCount++;
-					if(messageCount<=EPSILON) status=State.NORMAL;
-					else if(decreaseCount == CONSECUTIVE_DECREASES) {
-						aggressiveStrategy=false;
+					if(delta<=0) {
+						decreaseCount++;
+						if(decreaseCount >= CONSECUTIVE_DECREASES) {
+							if(messageCount<=EPSILON) status=State.NORMAL;
+							aggressiveStrategy=false;	
+						}
+
 					}
 				}
 				else if(delta>0) {

@@ -71,6 +71,8 @@ public abstract class DynamicClient implements Client{
 	}
 
 	public void stopClient() {
+		//Send all messages left
+		while(!sendBuffer.isEmpty()) emptyBuffer();
 		ps.stopPolling();
 		closeConnection();
 	}
@@ -159,7 +161,6 @@ public abstract class DynamicClient implements Client{
 	public void updateQueueStatus(int messageCount) {	
 		int delta = (messageCount - currMessageCount);
 		currMessageCount=messageCount;
-		//System.out.println("Delta: " + delta);
 		switch(status) {
 			case NORMAL: 
 				if(messageCount>EPSILON) status=State.CONGESTED;
@@ -168,9 +169,9 @@ public abstract class DynamicClient implements Client{
 			case CONGESTED:
 				if(delta<=0) {
 					decreaseCount++;
-					if(messageCount<=EPSILON) status=State.NORMAL;
-					else if(decreaseCount == CONSECUTIVE_DECREASES) {
-						aggressiveStrategy=false;
+					if(decreaseCount >= CONSECUTIVE_DECREASES) {
+						if(messageCount<=EPSILON) status=State.NORMAL;
+						aggressiveStrategy=false;	
 					}
 				}
 				else if(delta>0) {
@@ -183,7 +184,7 @@ public abstract class DynamicClient implements Client{
 		
 		//If strategy must be more aggressive, we need to extend buffer dimension.
 		//If strategy must be less aggressive, we need to reduce buffer dimension;
-		//before resizing it, we must be sure there are no more sample than buffer half dim.
+		//before resizng it, we must be sure there are no more sample than buffer half dim.
 		//In this case, we have to aggregate sample or empty the buffer, otherwise we can reduce its length.
 		if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
 		else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) {
@@ -262,9 +263,6 @@ public abstract class DynamicClient implements Client{
 			}
 			sendBuffer.clear();
 		}
-		//When sendBuffer is empty checks congestion severity to enlarge or reduce buffer dim, increasing storage capacity.
-		//if(aggressiveStrategy && BUFFER_DIM<MAX_BUFFER_DIM) BUFFER_DIM = MAX_BUFFER_DIM;
-		//else if(!aggressiveStrategy && BUFFER_DIM==MAX_BUFFER_DIM) BUFFER_DIM /=2;
 	}
 
 	/**
