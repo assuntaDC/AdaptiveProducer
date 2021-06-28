@@ -8,6 +8,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.naming.NamingException;
 
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 

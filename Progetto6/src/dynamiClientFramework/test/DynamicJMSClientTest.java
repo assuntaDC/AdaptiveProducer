@@ -24,12 +24,6 @@ public class DynamicJMSClientTest extends DynamicClientTest {
 	public DynamicJMSClientTest(String destination, String acceptorAddress, boolean pollingServiceTest) {
 		super(destination, acceptorAddress, pollingServiceTest);
 	}
-	
-	@Override
-	protected PollingServiceTest createPollingService(long pollingPeriod, boolean pollingServiceTest) {
-		return new PollingServiceTest(this, pollingPeriod, pollingServiceTest);
-	}
-
 				
 	/**
 	 * Starts connection with the destination queue.

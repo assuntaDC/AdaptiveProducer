@@ -69,12 +69,6 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	protected PollingServiceTest createPollingService(long pollingPeriod, boolean pollingServiceTest) {
-		return new PollingServiceTest(this, pollingPeriod, pollingServiceTest);
-	}
-
 	
 	@Override
 	public boolean isAlive() {
