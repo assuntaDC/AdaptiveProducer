@@ -71,8 +71,4 @@ public class DynamicJMSClientTest extends DynamicClientTest {
 		}
 	}
 
-	@Override
-	public boolean isAlive() {
-		return connected;
-	}
 }

@@ -12,7 +12,7 @@ public class MQTTtestProject {
 		
 		String acceptorAddress = "tcp://0.0.0.0:61616";
 		String topic = "topic.test";
-		int NODES = 10, CONSUMERS = 2;
+		int NODES = 1, CONSUMERS = 5;
 		
 		long max = 3000;
 	    long min = 500;
@@ -43,7 +43,7 @@ public class MQTTtestProject {
 		System.out.println("\n----SIMULATION SEEN FROM NODE N.1----\n");
 
 		//Let simulation run
-		Thread.sleep(10000);
+		Thread.sleep(3*1000);
 		
 		//stop and clean all
 		for(MQTTNodeDriver node: nodes) node.stopSending();

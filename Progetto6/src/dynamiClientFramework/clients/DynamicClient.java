@@ -77,8 +77,6 @@ public abstract class DynamicClient implements Client{
 		closeConnection();
 	}
 	//***********************************************/
-	
-	public abstract boolean isAlive();
 
 	/**
 	 * Send a message based on the connector chosen by the client.
@@ -326,7 +324,7 @@ public abstract class DynamicClient implements Client{
 		int validCount = 0;
 		for(Sample s: sendBuffer) {
 			if(s.isValid()) {
-				sum += (Double) s.getValue();
+				sum += (double) s.getValue();
 				validCount++;
 			}
 		}
@@ -343,7 +341,7 @@ public abstract class DynamicClient implements Client{
 		int validCount = 0;
 		for(Sample s: sendBuffer) {
 			if(s.isValid()) {
-				mean += (Double) s.getValue();
+				mean += (double) s.getValue();
 				validCount++;
 			}
 		}

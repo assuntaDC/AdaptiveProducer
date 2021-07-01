@@ -9,7 +9,7 @@ public class testProject {
 		
 		String acceptorAddress = "tcp://localhost:61616";
 		String queueName = "testQueue";
-		int NODES = 10, CONSUMERS = 5;
+		int NODES = 15, CONSUMERS = 5;
 		
 		long max = 3000;
 	    long min = 500;

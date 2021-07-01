@@ -17,9 +17,4 @@ public interface Client {
 	 */
 	public void stopClient();
 	
-	/**
-	 * Check if client is correctly working and connection is up.
-	 * @return true if client is alive, false otherwise.
-	 */
-	public boolean isAlive();
 }

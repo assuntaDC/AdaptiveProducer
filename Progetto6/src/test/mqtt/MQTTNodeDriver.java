@@ -9,7 +9,7 @@ import dynamiClientFramework.clients.Client;
 import dynamiClientFramework.clients.DMQTTClientCreator;
 import dynamiClientFramework.clients.Sample;
 import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
-import dynamiClientFramework.test.TestDJMSClientCreator;
+import dynamiClientFramework.test.TestDMQTTClientCreator;
 
 public class MQTTNodeDriver {
 	private Client dclient;
@@ -25,7 +25,7 @@ public class MQTTNodeDriver {
 	
 	public MQTTNodeDriver(String topicName, String acceptorAddress, int id){
 		nodeId = id;
-		if(nodeId==1) dclient = new TestDJMSClientCreator().createDynamicClient(topicName, acceptorAddress, true);
+		if(nodeId==1) dclient = new TestDMQTTClientCreator().createDynamicClient(topicName, acceptorAddress, true);
 		else dclient = new DMQTTClientCreator().createDynamicClient(topicName, acceptorAddress);
 	}
 	
@@ -47,7 +47,7 @@ public class MQTTNodeDriver {
 			int temperature = (int) ((int)(Math.random() * range) + min);
 			try {
 				Sample sample = new Sample(temperature, 5000);
-				if(dclient.isAlive()) dclient.trySending(sample);
+				dclient.trySending(sample);
 				//System.out.println(java.time.LocalTime.now() + " Node n." + nodeId + " - Produced mex n." + id + " : " + temperature + " C");
 				id++;
 				sent++;

@@ -74,8 +74,6 @@ public abstract class DynamicClientTest implements Client{
 		closeConnection();
 	}
 
-	public abstract boolean isAlive();
-
 	protected abstract void sendMessage(Sample sample);
 
 	protected abstract void startConnection();
@@ -286,7 +284,7 @@ public abstract class DynamicClientTest implements Client{
 		int validCount = 0;
 		for(Sample s: sendBuffer) {
 			if(s.isValid()) {
-				sum += (Double) s.getValue();
+				sum += (double) s.getValue();
 				validCount++;
 			}else invalidCount++;
 		}

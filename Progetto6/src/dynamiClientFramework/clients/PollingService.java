@@ -85,7 +85,11 @@ public class PollingService{
 			client.updateQueueStatus(messageCount);
 		} catch (JMSException e) {
 			e.printStackTrace();
-		} catch (Exception e) {
+		}
+		/*catch(IllegalStateException e) {
+			System.out.println("Consumer already closed.");
+		}*/
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

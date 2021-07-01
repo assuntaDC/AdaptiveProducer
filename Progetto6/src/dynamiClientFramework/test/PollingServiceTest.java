@@ -66,7 +66,7 @@ public class PollingServiceTest{
 			connection.close();
 		} catch (JMSException e) {
 			e.printStackTrace();
-		}		
+		}	
 	}
 
 
@@ -105,7 +105,7 @@ public class PollingServiceTest{
 	private class PollingServiceThread implements Runnable{
 		public void run() {		
 			try {
-				if(client.isAlive()) polling();
+				polling();
 			}catch(Exception e) {
 				System.err.println(e);
 			}

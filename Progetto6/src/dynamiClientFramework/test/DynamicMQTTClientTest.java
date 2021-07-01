@@ -18,7 +18,7 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 	
 	private IMqttClient publisher;
 
-	public DynamicMQTTClientTest(String destination, String acceptorAddress, boolean pollingServiceTest) {
+	public DynamicMQTTClientTest(String destination, String acceptorAddress, boolean pollingServiceTest){
 		super(destination, acceptorAddress, pollingServiceTest);
 	}
 
@@ -63,16 +63,11 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 	@Override
 	protected void closeConnection() {
 		try {
-	        //publisher.close();
 			publisher.disconnect();
 		} catch (MqttException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	@Override
-	public boolean isAlive() {
-		return publisher.isConnected();
-	}
 
 }

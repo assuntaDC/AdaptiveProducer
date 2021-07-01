@@ -67,16 +67,11 @@ public class DynamicMQTTClient extends DynamicClient {
 	@Override
 	protected void closeConnection() {
 		try {
-			//publisher.close();
 			publisher.disconnect();
 		} catch (MqttException e) {
 			e.printStackTrace();
 		}
 	}
 
-	@Override
-	public boolean isAlive() {
-		return publisher.isConnected();
-	}
 
 }

@@ -8,7 +8,6 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-import javax.naming.NamingException;
 
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
@@ -19,7 +18,6 @@ public class DynamicJMSClient extends DynamicClient {
 	private QueueConnection connection;
 	private QueueSession session;
 	private QueueConnectionFactory factory;
-	private boolean connected;
 
 
 	/**
@@ -40,7 +38,6 @@ public class DynamicJMSClient extends DynamicClient {
 			destination = session.createQueue(super.getDestination());
 			sender = session.createSender(destination);	
 			connection.start();
-			connected=true;
 		} catch (JMSException e) {
 			System.err.println("Cannot start connection to " + super.getDestination() + " queue\n");
 			e.printStackTrace();
@@ -50,7 +47,6 @@ public class DynamicJMSClient extends DynamicClient {
 	@Override
 	public void closeConnection() {
 		try {
-			connected=false;
 			sender.close();
 			session.close();
 			connection.close();
@@ -71,8 +67,4 @@ public class DynamicJMSClient extends DynamicClient {
 		}
 	}
 
-	@Override
-	public boolean isAlive() {
-		return connected;
-	}
 }
