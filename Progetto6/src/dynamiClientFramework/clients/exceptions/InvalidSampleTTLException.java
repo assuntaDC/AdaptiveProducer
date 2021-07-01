@@ -7,9 +7,9 @@ public class InvalidSampleTTLException extends Exception{
 	public InvalidSampleTTLException(String message) {
 		super(message);
 	}
-	
+
 	public InvalidSampleTTLException() {
 		super();
 	}
-	
+
 }

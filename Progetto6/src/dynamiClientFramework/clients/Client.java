@@ -6,15 +6,15 @@ public interface Client {
 	 * @param sample Data to send
 	 */
 	public void trySending(Sample sample);
-	
+
 	/**
 	 * Connect client to topic/queue.
 	 */
 	public void startClient();
-	
+
 	/**
 	 * Disconnect client from topic/queue.
 	 */
 	public void stopClient();
-	
+
 }

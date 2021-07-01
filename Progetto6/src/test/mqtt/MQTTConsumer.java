@@ -20,46 +20,45 @@ public class MQTTConsumer{
 	private String address;
 	private IMqttClient subscriber;
 	private int consumerID;
-	private int consumed;
-	
+
 	public MQTTConsumer(String topic, String acceptorAddress, int consumerID){
 		this.topic = topic;
 		this.address = acceptorAddress;	
 		this.consumerID = consumerID;
 	}
-	
+
 	public void startConsuming() throws MqttSecurityException, MqttException{
-        String subID = UUID.randomUUID().toString();
+		String subID = UUID.randomUUID().toString();
 		subscriber = new MqttClient(address, subID);
 		subscriber.connect();
 		subscriber.setCallback(new MqttCallback() {
-			 public void messageArrived(String topic, MqttMessage message) throws Exception {
-					consumed++;
-					Thread.sleep(CONSUMER_PERIOD);
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				Thread.sleep(CONSUMER_PERIOD);
+				/*
 			        ByteArrayInputStream bis = new ByteArrayInputStream(message.getPayload());
 			        Sample s = (Sample) new ObjectInputStream(bis).readObject(); 
 			        String time = new Timestamp(System.currentTimeMillis()).toString();
 			        System.out.println("\nReceived a Message!" +
 			            "\n\tTime:    " + time +
 			            "\n\tTopic:   " + topic +
-			            "\n\tMessage: " + s.toString() + "\n");
-			    }
+			            "\n\tMessage: " + s.toString() + "\n");*/
+			}
 
-		    public void connectionLost(Throwable cause) {
-		        System.out.println("Connection to Solace broker lost!" + cause.getMessage());
-		    }
+			public void connectionLost(Throwable cause) {
+				System.out.println("Connection to Solace broker lost!" + cause.getMessage());
+			}
 
-		    public void deliveryComplete(IMqttDeliveryToken token) {
-		    }
+			public void deliveryComplete(IMqttDeliveryToken token) {
+			}
 
 		});
-        
+
 		subscriber.subscribe(topic);
 	}
-	
+
 	public void stopConsuming() throws MqttException{
 		subscriber.unsubscribe(topic);
 		subscriber.disconnect();
 	}
-	
+
 }

@@ -16,31 +16,31 @@ public class MQTTNodeDriver {
 	public long SENDER_PERIOD = 500;
 	private int nodeId;
 	public int sent = 0;
-	
+
 	double max = 30;
-    double min = 20;
-    double range = max - min + 1;
+	double min = 20;
+	double range = max - min + 1;
 	private ScheduledExecutorService executor;
 	private ScheduledFuture<?> future;
-	
+
 	public MQTTNodeDriver(String topicName, String acceptorAddress, int id){
 		nodeId = id;
 		if(nodeId==1) dclient = new TestDMQTTClientCreator().createDynamicClient(topicName, acceptorAddress, true);
 		else dclient = new DMQTTClientCreator().createDynamicClient(topicName, acceptorAddress);
 	}
-	
+
 	public void startSending() {
 		dclient.startClient();
 		executor = Executors.newSingleThreadScheduledExecutor();
 		future = executor.scheduleWithFixedDelay(new SendThread(), 0, SENDER_PERIOD, TimeUnit.MILLISECONDS);			
 	}
-	
+
 	public void stopSending() {
 		dclient.stopClient();
 		future.cancel(false);
 		executor.shutdown();
 	}
-	
+
 	private class SendThread implements Runnable{
 		private int id = 1;
 		public void run() {

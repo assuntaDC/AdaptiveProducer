@@ -15,7 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import dynamiClientFramework.clients.Sample;
 
 public class DynamicMQTTClientTest extends DynamicClientTest {
-	
+
 	private IMqttClient publisher;
 
 	public DynamicMQTTClientTest(String destination, String acceptorAddress, boolean pollingServiceTest){
@@ -24,15 +24,15 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 
 	@Override
 	protected void sendMessage(Sample sample) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(sample);
-            oos.flush();
-            byte [] data = bos.toByteArray();
-        	MqttMessage msg = new MqttMessage(data); 
-            msg.setQos(0);
-            //msg.setRetained(true);
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(bos);
+			oos.writeObject(sample);
+			oos.flush();
+			byte [] data = bos.toByteArray();
+			MqttMessage msg = new MqttMessage(data); 
+			msg.setQos(0);
+			//msg.setRetained(true);
 			publisher.publish(super.getDestination(), msg);
 		} catch (MqttPersistenceException e) {
 			e.printStackTrace();
@@ -68,6 +68,6 @@ public class DynamicMQTTClientTest extends DynamicClientTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 
 }

@@ -117,7 +117,7 @@ public abstract class DynamicClient implements Client{
 			prop.load(input);
 			EPSILON = Integer.parseInt(prop.getProperty("epsilon"));
 			if(EPSILON<=0) throw new InvalidPropertyException("Epsilon must be greater than 0.");
-			
+
 			CONSECUTIVE_DECREASES = Integer.parseInt(prop.getProperty("consecutiveDecreases"));
 			if(CONSECUTIVE_DECREASES<=0) throw new InvalidPropertyException("ConsecutiveDecreases must be greater than 0.");
 
@@ -160,26 +160,26 @@ public abstract class DynamicClient implements Client{
 		int delta = (messageCount - currMessageCount);
 		currMessageCount=messageCount;
 		switch(status) {
-			case NORMAL: 
-				if(messageCount>EPSILON) status=State.CONGESTED;
-				decreaseCount = 0;
-				break;
-			case CONGESTED:
-				if(delta<=0) {
-					decreaseCount++;
-					if(decreaseCount >= CONSECUTIVE_DECREASES) {
-						if(messageCount<=EPSILON) status=State.NORMAL;
-						aggressiveStrategy=false;	
-					}
+		case NORMAL: 
+			if(messageCount>EPSILON) status=State.CONGESTED;
+			decreaseCount = 0;
+			break;
+		case CONGESTED:
+			if(delta<=0) {
+				decreaseCount++;
+				if(decreaseCount >= CONSECUTIVE_DECREASES) {
+					if(messageCount<=EPSILON) status=State.NORMAL;
+					aggressiveStrategy=false;	
 				}
-				else if(delta>0) {
-					aggressiveStrategy=true;
-					decreaseCount = 0;
-				}
-				
-				break;
 			}
-		
+			else if(delta>0) {
+				aggressiveStrategy=true;
+				decreaseCount = 0;
+			}
+
+			break;
+		}
+
 		//If strategy must be more aggressive, we need to extend buffer dimension.
 		//If strategy must be less aggressive, we need to reduce buffer dimension;
 		//before resizng it, we must be sure there are no more sample than buffer half dim.

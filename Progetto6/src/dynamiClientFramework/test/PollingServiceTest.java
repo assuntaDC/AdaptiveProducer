@@ -35,7 +35,7 @@ public class PollingServiceTest{
 		this.client=client;
 		this.pollingPeriod=pollingPeriod;
 		this.test = test;
-		
+
 	}
 
 	public void startPolling(){

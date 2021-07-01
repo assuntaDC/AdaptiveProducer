@@ -12,36 +12,36 @@ import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
 import dynamiClientFramework.test.TestDJMSClientCreator;
 
 public class NodeDriver{
-	
+
 	private Client dclient;
 	public long SENDER_PERIOD = 500;
 	private int nodeId;
 	public int sent = 0;
-	
+
 	double max = 30;
-    double min = 20;
-    double range = max - min + 1;
+	double min = 20;
+	double range = max - min + 1;
 	private ScheduledExecutorService executor;
 	private ScheduledFuture<?> future;
-	
+
 	public NodeDriver(String queueName, String acceptorAddress, int id){
 		nodeId = id;
 		if(id!=1) dclient = new DJMSClientCreator().createDynamicClient(queueName, acceptorAddress);
 		else dclient = new TestDJMSClientCreator().createDynamicClient(queueName, acceptorAddress, true);
 	}
-	
+
 	public void startSending() {
 		dclient.startClient();
 		executor = Executors.newSingleThreadScheduledExecutor();
 		future = executor.scheduleWithFixedDelay(new SendThread(), 0, SENDER_PERIOD, TimeUnit.MILLISECONDS);			
 	}
-	
+
 	public void stopSending() {
 		dclient.stopClient();
 		future.cancel(false);
 		executor.shutdown();
 	}
-	
+
 	private class SendThread implements Runnable{
 		private int id = 1;
 		public void run() {

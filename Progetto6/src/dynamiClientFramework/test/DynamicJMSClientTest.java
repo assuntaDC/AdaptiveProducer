@@ -12,19 +12,19 @@ import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 import dynamiClientFramework.clients.Sample;
 
 public class DynamicJMSClientTest extends DynamicClientTest {
-		
+
 	private Queue destination;
 	private QueueSender sender;
 	private QueueConnection connection;
 	private QueueSession session;
 	private QueueConnectionFactory factory;
 	private boolean connected;
-	
+
 
 	public DynamicJMSClientTest(String destination, String acceptorAddress, boolean pollingServiceTest) {
 		super(destination, acceptorAddress, pollingServiceTest);
 	}
-				
+
 	/**
 	 * Starts connection with the destination queue.
 	 */
@@ -38,12 +38,12 @@ public class DynamicJMSClientTest extends DynamicClientTest {
 			sender = session.createSender(destination);	
 			connection.start();
 			connected=true;
-			} catch (JMSException e) {
+		} catch (JMSException e) {
 			System.err.println("Cannot start connection to " + super.getDestination() + " queue\n");
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Closes connection with the destination queue.
 	 */
@@ -59,7 +59,7 @@ public class DynamicJMSClientTest extends DynamicClientTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 
 	@Override
 	protected void sendMessage(Sample sample) {

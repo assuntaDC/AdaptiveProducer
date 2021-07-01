@@ -51,7 +51,8 @@ public class PollingService{
 			Queue managementQueue = session.createQueue("activemq.management");
 			requestor = new QueueRequestor(session, managementQueue);
 			executor = Executors.newSingleThreadScheduledExecutor();
-			future = executor.scheduleWithFixedDelay(new PollingServiceThread(), 0, pollingPeriod, TimeUnit.MILLISECONDS);					
+			future = executor.scheduleWithFixedDelay(new PollingServiceThread(), 0,
+					pollingPeriod, TimeUnit.MILLISECONDS);					
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
