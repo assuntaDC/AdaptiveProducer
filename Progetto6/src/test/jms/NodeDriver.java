@@ -5,15 +5,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import dynamiClientFramework.clients.Client;
-import dynamiClientFramework.clients.DJMSClientCreator;
-import dynamiClientFramework.clients.Sample;
-import dynamiClientFramework.clients.exceptions.InvalidSampleTTLException;
-import dynamiClientFramework.test.TestDJMSClientCreator;
+import adaptiveProducerFramework.adaptiveProducer.JMSProducerCreator;
+import adaptiveProducerFramework.adaptiveProducer.Producer;
+import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.exceptions.InvalidSampleTTLException;
+import adaptiveProducerFramework.test.JMSProducerCreatorTest;
 
 public class NodeDriver{
 
-	private Client dclient;
+	private Producer producer;
 	public long SENDER_PERIOD = 500;
 	private int nodeId;
 	public int sent = 0;
@@ -26,18 +26,18 @@ public class NodeDriver{
 
 	public NodeDriver(String queueName, String acceptorAddress, int id){
 		nodeId = id;
-		if(id!=1) dclient = new DJMSClientCreator().createDynamicClient(queueName, acceptorAddress);
-		else dclient = new TestDJMSClientCreator().createDynamicClient(queueName, acceptorAddress, true);
+		if(id!=1) producer = new JMSProducerCreator().createProducer(queueName, acceptorAddress);
+		else producer = new JMSProducerCreatorTest().createProducer(queueName, acceptorAddress, true);
 	}
 
 	public void startSending() {
-		dclient.startClient();
+		producer.startProducer();
 		executor = Executors.newSingleThreadScheduledExecutor();
 		future = executor.scheduleWithFixedDelay(new SendThread(), 0, SENDER_PERIOD, TimeUnit.MILLISECONDS);			
 	}
 
 	public void stopSending() {
-		dclient.stopClient();
+		producer.stopProducer();
 		future.cancel(false);
 		executor.shutdown();
 	}
@@ -48,7 +48,7 @@ public class NodeDriver{
 			int temperature = (int) ((int)(Math.random() * range) + min);
 			try {
 				Sample sample = new Sample(temperature, 500);
-				dclient.trySending(sample);
+				producer.trySending(sample);
 				//System.out.println(java.time.LocalTime.now() + " Node n." + nodeId + " - Produced mex n." + id + " : " + temperature + " C");
 				id++;
 				sent++;
