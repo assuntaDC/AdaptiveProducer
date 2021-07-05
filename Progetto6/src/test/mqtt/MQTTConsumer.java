@@ -12,7 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
-import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.Sample;
 
 public class MQTTConsumer{
 	public long CONSUMER_PERIOD = 500;

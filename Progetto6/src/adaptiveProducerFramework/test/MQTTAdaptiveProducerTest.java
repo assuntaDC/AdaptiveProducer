@@ -13,7 +13,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
-import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.Sample;
 
 public class MQTTAdaptiveProducerTest extends AdaptiveProducerTest {
 

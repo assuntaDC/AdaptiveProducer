@@ -1,4 +1,4 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,7 +20,7 @@ import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
 public class PollingService{
 	private long pollingPeriod;
-	private AdaptiveProducer producer;
+	private AdaptiveProducer client;
 	private QueueConnectionFactory factory;
 	private QueueSession session;
 	private QueueConnection connection;
@@ -30,12 +30,12 @@ public class PollingService{
 
 	/**
 	 * 
-	 * @param producer than requires queue/topic monitoring
+	 * @param client than requires queue/topic monitoring
 	 * @param pollingPeriod expressed in milliseconds
 	 * @param topic set to true if object has to monitor a topic, false otherwise.
 	 */
-	public PollingService(AdaptiveProducer producer, long pollingPeriod){
-		this.producer=producer;
+	public PollingService(AdaptiveProducer client, long pollingPeriod){
+		this.client=client;
 		this.pollingPeriod=pollingPeriod;
 	}
 
@@ -44,7 +44,7 @@ public class PollingService{
 	 */
 	public void startPolling(){
 		try {
-			factory = new ActiveMQJMSConnectionFactory(producer.getAddress());	
+			factory = new ActiveMQJMSConnectionFactory(client.getAddress());	
 			connection = factory.createQueueConnection();
 			connection.start();
 			session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -74,16 +74,16 @@ public class PollingService{
 	}
 
 	/**
-	 * Checks message count into destination queue and updates producer congestion status.
+	 * Checks message count into destination queue and updates client congestion status.
 	 */
 	public void polling() {
 		Message request;
 		try {
 			request = session.createMessage();
-			JMSManagementHelper.putAttribute(request, ResourceNames.ADDRESS + producer.getDestination(), "MessageCount");				   
+			JMSManagementHelper.putAttribute(request, ResourceNames.ADDRESS + client.getDestination(), "MessageCount");				   
 			Message reply = requestor.request(request);
 			int messageCount = (Integer) JMSManagementHelper.getResult(reply, Integer.class);
-			producer.updateQueueStatus(messageCount);
+			client.updateQueueStatus(messageCount);
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
@@ -96,12 +96,13 @@ public class PollingService{
 	}
 
 	/**
-	 * Executes polling if producer is alive and connection is up.
+	 * Executes polling if client is alive and connection is up.
 	 * @author Assunta De Caro, Pietro Vitagliano
 	 */
 	private class PollingServiceThread implements Runnable{
 		public void run() {		
 			try {
+				//if(client.isAlive()) polling();
 				polling();
 			}catch(Exception e) {
 				System.err.println(e);

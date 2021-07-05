@@ -1,4 +1,4 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,7 +34,7 @@ public abstract class AdaptiveProducer implements Producer{
 	private String destination, acceptorAddress;
 
 	/**
-	 * Create an adaptive producer instance and set up its properties.
+	 * Create a producer instance and set up its properties.
 	 * @param destination queue/topic name to connect to
 	 * @param acceptorAddress valid Artemis acceptor address
 	 */
@@ -79,18 +79,18 @@ public abstract class AdaptiveProducer implements Producer{
 	//***********************************************/
 
 	/**
-	 * Send a message based on the connector chosen by the Producer.
+	 * Send a message based on the connector chosen by the producer.
 	 * @param sample Data to send
 	 */
 	protected abstract void sendMessage(Sample sample);
 
 	/**
-	 * Start connection to topic/queue based on the connector chosen by the Producer.
+	 * Start connection to topic/queue based on the connector chosen by the producer.
 	 */
 	protected abstract void startConnection();
 
 	/**
-	 * Close connection to topic/queue based on the connector chosen by the Producer.
+	 * Close connection to topic/queue based on the connector chosen by the producer.
 	 */
 	protected abstract void closeConnection();
 	//*********************************************/

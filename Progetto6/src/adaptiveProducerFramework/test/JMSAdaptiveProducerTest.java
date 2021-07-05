@@ -10,7 +10,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import org.apache.activemq.artemis.jms.client.ActiveMQJMSConnectionFactory;
 
-import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.Sample;
 
 public class JMSAdaptiveProducerTest extends AdaptiveProducerTest {
 

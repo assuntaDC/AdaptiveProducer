@@ -1,4 +1,4 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class MQTTAdaptiveProducer extends AdaptiveProducer {
 	private IMqttClient publisher;
 
 	/**
-	 * Creates a MQTTAdaptiveProducer instance.
+	 * Creates a DynamicMQTTClient instance.
 	 * @param destination topic to connect to.
 	 * @param acceptorAddress Artemis valid acceptor address.
 	 */

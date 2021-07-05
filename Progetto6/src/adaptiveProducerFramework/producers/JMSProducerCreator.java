@@ -1,4 +1,4 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 public class JMSProducerCreator implements ProducerCreator {
 

@@ -1,4 +1,4 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
@@ -21,7 +21,7 @@ public class JMSAdaptiveProducer extends AdaptiveProducer {
 
 
 	/**
-	 * Creates a JMSAdaptiveProducer instance.
+	 * Creates a JMS aaptive producer.
 	 * @param destination queue to connect to.
 	 * @param acceptorAddress Artemis valid acceptor to connect to.
 	 */

@@ -1,11 +1,11 @@
-package adaptiveProducerFramework.adaptiveProducer;
+package adaptiveProducerFramework.producers;
 
 public interface ProducerCreator {
 	/**
-	 * Hide Dynamic Client creation.
+	 * Hide Adaptive Producer creation.
 	 * @param destination queue/topic to connect to-
 	 * @param acceptorAddress Artemis valid acceptor address.
-	 * @return a Client instance.
+	 * @return a Producer instance.
 	 */
 	public Producer createProducer(String destination, String acceptorAddress);
 }

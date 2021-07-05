@@ -1,6 +1,6 @@
 package adaptiveProducerFramework.test;
 
-import adaptiveProducerFramework.adaptiveProducer.Producer;
+import adaptiveProducerFramework.producers.Producer;
 
 public class MQTTProducerCreatorTest implements ProducerCreatorTest {
 

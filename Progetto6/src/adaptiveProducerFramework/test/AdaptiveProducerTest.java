@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import adaptiveProducerFramework.adaptiveProducer.Producer;
-import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.Producer;
+import adaptiveProducerFramework.producers.Sample;
 import adaptiveProducerFramework.producers.exceptions.InvalidPropertyException;
 import adaptiveProducerFramework.producers.exceptions.InvalidSampleTTLException;
 

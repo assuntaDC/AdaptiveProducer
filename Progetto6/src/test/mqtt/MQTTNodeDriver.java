@@ -5,9 +5,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import adaptiveProducerFramework.adaptiveProducer.MQTTProducerCreator;
-import adaptiveProducerFramework.adaptiveProducer.Producer;
-import adaptiveProducerFramework.adaptiveProducer.Sample;
+import adaptiveProducerFramework.producers.MQTTProducerCreator;
+import adaptiveProducerFramework.producers.Producer;
+import adaptiveProducerFramework.producers.Sample;
 import adaptiveProducerFramework.producers.exceptions.InvalidSampleTTLException;
 import adaptiveProducerFramework.test.MQTTProducerCreatorTest;
 
